@@ -10,7 +10,9 @@ Hybrid Intelligence Simulator based on JaCaMo Multi-Agent System Framework
 ### Ben Schlup (ben.schlup@schlup.com)
 
 ---
-The paper describing this work will be made available after the university has accepted the thesis for the Master's degree. If you require any information with respect to this project prior to publication of the dissertation, please contact ben.schlup@schlup.com. 
+The paper describing this work will be made available after the university has accepted the thesis for the Master's degree. If you require any information with respect to this project prior to publication of the dissertation, please contact ben.schlup@schlup.com.  
+
+The code was developed on JaCaMo v1.1 and tested successfully with JaCaMo v1.2. The folder structure fits into the Docker version of JaCaMo, which can be found here: https://github.com/jacamo-lang/docker.
   
 **Note**:  
 Apart from JaCaMo v1.1 or v1.2, snakeyaml is required. During initial development and test, snakeyaml v1.33 (https://mvnrepository.com/artifact/org.yaml/snakeyaml/1.33) was put into the /lib folder.
