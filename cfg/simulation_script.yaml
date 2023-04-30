@@ -1,0 +1,538 @@
+# Simulation script: Complex mutual learning scenario with changing situations
+# Benjamin Schlup, Student ID 200050007
+
+########################################################################################################################
+# The processing of Customer Service Requests (CSR) at a telecom service
+# provider is simulated. It is assumed communication with the client
+# is done through a Chatbot, but it could be technically done
+# through any other channel -> with potentially different timeouts,
+# as a customer at a phone might be less patient. (Or via e-mail, may
+# be more patient.)
+########################################################################################################################
+storybookTasks:
+# The overall story encompasses the following tasks to be performed by the
+# simulated HIS:
+# Initial task, no concurrent CSRs
+- taskName: Customer Service Request 1
+  compositeTask: Customer modem software issue
+  startTimeISO8601: 2023-01-03T07:00:00Z
+
+# Now two similar tasks concurrently
+- taskName: Customer Service Request 2
+  compositeTask: Customer modem software issue
+  startTimeISO8601: 2023-01-03T07:55:30Z
+
+- taskName: Customer Service Request 3
+  compositeTask: Customer modem software issue
+  startTimeISO8601: 2023-01-03T08:05:30Z
+
+# Now a different task
+- taskName: Customer Service Request 4
+  compositeTask: Provider setting issue
+  startTimeISO8601: 2023-01-03T10:30:00Z
+
+# Back to the initial task, that now requires different analysis
+- taskName: Customer Service Request 5
+  compositeTask: Customer modem software issue v2
+  startTimeISO8601: 2023-01-03T11:20:30Z
+
+# The same task again, assuming there was learning/teaching in between
+- taskName: Customer Service Request 6
+  compositeTask: Customer modem software issue v2
+  startTimeISO8601: 2023-01-03T12:20:30Z
+
+# Now three different tasks concurrently
+- taskName: Customer Service Request 7
+  compositeTask: Provider setting issue
+  startTimeISO8601: 2023-01-03T14:00:00Z
+
+- taskName: Customer Service Request 8
+  compositeTask: Customer modem software issue v2
+  startTimeISO8601: 2023-01-03T14:00:30Z
+
+- taskName: Customer Service Request 9
+  compositeTask: Customer modem software issue v2
+  startTimeISO8601: 2023-01-03T14:20:00Z
+
+########################################################################################################################
+compositeTaskDefinitions:
+# The first composite task in this script is the "Customer modem software issue",
+# defined as follows:
+  Customer modem software issue:
+    atomicTasks:
+      - situation: Client is unidentified
+        operation: Identify client
+      - situation: Client known
+
+      - situation: Affected service unknown
+        operation: Identify affected service
+      - situation: Internet service affected
+
+      - situation: Customer-side device status unclear
+        operation: Ask customer status of network connection LED
+      - situation: Network connection LED is yellow
+
+      - situation: Provider-side connection unchecked
+        operation: Check provider-side connection
+      - situation: Provider-side connection OK
+
+      - situation: User device version unchecked
+        operation: Check known device software issues
+      - situation: Known software issue
+
+      - situation: Device update required
+        operation: Trigger remote device update
+
+      - situation: No problem symptoms anymore
+        operation: Confirm successful closure
+
+    timeout: 3600 # Clients expect the problem-solving process to be concluded within 1 hr
+
+  # The second story has very similar symptoms, but requires another test
+  # to check for provider-side problems:
+  Provider setting issue:
+    atomicTasks:
+      - situation: Client is unidentified
+        operation: Identify client
+      - situation: Client known
+
+      - situation: Affected service unknown
+        operation: Identify affected service
+      - situation: Internet service affected
+
+      - situation: Customer-side device status unclear
+        operation: Ask customer status of network connection LED
+      - situation: Network connection LED is yellow
+
+      - situation: Provider-side connection unchecked
+        operation: Check provider-side connection
+      - situation: Provider-side connection OK
+
+      - situation: Wireless connection unchecked
+        operation: Switch to wireless connection
+      - situation: Wireless non-functional
+
+      - situation: Extended initial discovery completed
+
+      - situation: Provider knowledge-base unchecked
+        operation: Check provider knowledge base
+      - situation: Provider-side setting issue
+
+      - situation: Wrong provider-side setting X
+        operation: Change setting X on provider side
+      - situation: Fixed provider-side setting
+
+      - situation: No problem symptoms anymore
+        operation: Confirm successful closure
+
+    timeout: 3600 # Clients expect the problem-solving process to be concluded within 1 hr
+
+  # The third variant emerges after seeing that a differential diagnosis is
+  # required to separate the customer modem issue from the provider-side issue:
+  Customer modem software issue v2:
+    atomicTasks:
+      - situation: Client is unidentified
+        operation: Identify client
+      - situation: Client known
+
+      - situation: Affected service unknown
+        operation: Identify affected service
+      - situation: Internet service affected
+
+      - situation: Customer-side device status unclear
+        operation: Ask customer status of network connection LED
+      - situation: Network connection LED is yellow
+
+      - situation: Provider-side connection unchecked
+        operation: Check provider-side connection
+      - situation: Provider-side connection OK
+
+      - situation: Wireless connection unchecked
+        operation: Switch to wireless connection
+      - situation: Wireless connection OK
+
+      - situation: Extended initial discovery completed
+
+      - situation: Provider knowledge-base unchecked
+        operation: Check provider knowledge base
+      - situation: Known software issue
+
+      - situation: Device update required
+        operation: Trigger remote device update
+
+      - situation: No problem symptoms anymore
+        operation: Confirm successful closure
+
+    timeout: 3600 # Clients expect the problem-solving process to be concluded within 1 hr
+
+# Here follow the individual atomic tasks and situations used in composite tasks
+atomicTaskDefinitions:
+
+# Initially, upon receiving a Customer Service Request (CSR),
+# a client is unidentified. It is assumed that both the CA and
+# the HA are competent to identify clients from the beginning,
+# and no improvements by learning are expected.
+# CAs are expected to be quicker and more precise.
+  - situation: Client is unidentified
+    preConditions:
+      - '! client_identification_attempted'
+    operation: Identify client
+    minimumQuality: 0.95
+    postConditions:
+      - '+ client_identification_attempted'
+    caConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 45
+        initialQuality: 0.94
+    haConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 50
+        initialQuality: 0.93
+    maximumRetries: 1
+    timeout: 100
+
+# There are two possible states after a successful client identification
+# operation: Either a client is now known, or it is not a client but 
+# someone else on the Chat
+  - situation: Client known
+    preConditions:
+      - 'client_identification_attempted'
+    postConditions:
+      - '+ client_known'
+
+  - situation: Not a client
+    preConditions:
+      - 'client_identification_attempted'
+    postConditions:
+      - '+ not_a_client'
+
+# After a client has been identified, it must be made sure that we understand
+# with which services he/she is experiencing issues. It is assumed that a
+# CA can swiftly list the client's services and let him make a choice,
+# whereas as a HA would need to manually identify the client using
+# his own words. The CA is perfectly quick, whereas the HA uses more
+# time and achieves lower quality initially
+  - situation: Affected service unknown
+    preConditions:
+      - 'client_known'
+      - '! affected_service_identified'
+    operation: Identify affected service
+    minimumQuality: 0.95
+    postConditions:
+      - '+ affected_service_identified'
+    caConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 1
+      execution:
+        initialTime: 30
+        initialQuality: 0.94
+    haConfig:
+      initialKnowledge: true
+      execution:
+        initialTime: 50
+        minimumTime: 40
+        initialQuality: 0.90
+        optimalQuality: 0.94
+        learningCycles: 20
+    maximumRetries: 2
+    timeout: 90
+
+# The current story only refers to the Internet access service, but
+# other services could be integrated easily:
+  - situation: Internet service affected
+    preConditions:
+      - 'affected_service_identified'
+    postConditions:
+      - '+ internet_service_affected'
+      - '+ has_problem_symptoms'
+
+# Once we know the customer suffers from Internet access issues,
+# one thing is that we want to check the status of the customer's
+# access device. This is equally easily done by both HA and CA,
+# but a CA may be quicker as there is no need for manual typing.
+# The quality is also impacted by the performance of the customer.
+# We assume that a CA does not have that capability initially,
+# but can be trained by a human to ask this at the right point
+# in time. Also, the HA needs some training to understand that
+# this is the right question, and he/she improves over time.
+  - situation: Customer-side device status unclear
+    preConditions:
+      - 'internet_service_affected'
+      - 'has_problem_symptoms'
+      - '! asked_customer_about_modem_status_led'
+    operation: Ask customer status of network connection LED
+    minimumQuality: 0.90
+    postConditions:
+      - '+ asked_customer_about_modem_status_led'
+    caConfig:
+      initialKnowledge: false
+      evaluation:
+        initialTime: 2
+      execution:
+        initialTime: 60
+        initialQuality: 0.88
+    haConfig:
+      initialKnowledge: false
+      evaluation:
+        initialTime: 10
+        minimumTime: 2
+        learningTime: 0
+      execution:
+        initialTime: 60
+        minimumTime: 40
+        learningTime: 60
+        learningCycles: 2
+        teachingTime: 1800  # HA can teach the CA within 30 minutes to perform this task
+    maximumRetries: 2
+
+# For this simulation, only one outcome is required: a yellow network connection LED
+  - situation: Network connection LED is yellow
+    preConditions:
+      - 'asked_customer_about_modem_status_led'
+    postConditions:
+      - '+ network_connection_led_is_yellow'
+
+# If the Internet access is affected, the provider-side status should be checked:
+# not surprisingly, this takes a HA much longer than a CA.
+  - situation: Provider-side connection unchecked
+    preConditions:
+      - 'internet_service_affected'
+      - '! provider_side_connection_checked'
+    operation: Check provider-side connection
+    postConditions:
+      - '+ provider_side_connection_checked'
+    caConfig:
+      initialKnowledge: false
+      evaluation:
+        initialTime: 2
+      execution:
+        initialTime: 10
+    haConfig:
+      initialKnowledge: false
+      evaluation:
+        initialTime: 5
+        learningTime: 0
+      execution:
+        initialTime: 900
+        minimumTime: 180
+        learningTime: 120
+        teachingTime: 1800  # HA can teach the CA within 30 minutes to perform this task
+
+# This script only required the status that the provider-side connection is ok
+  - situation: Provider-side connection OK
+    preConditions:
+      - 'provider_side_connection_checked'
+    postConditions:
+      - '+ provider_side_connection_ok'
+
+# Now we have the option to check device information from a vendor. As this is
+# unstructured data, it must be done by a human and cannot be easily learned
+# by a machine.
+  - situation: User device version unchecked
+    preConditions:
+      - 'internet_service_affected'
+      - 'provider_side_connection_ok'
+      - 'network_connection_led_is_yellow'
+      - '! knowledge_base_check_done'
+    operation: Check known device software issues
+    postConditions:
+      - '+ knowledge_base_check_done'
+    haConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 1
+        learningTime: 0
+      execution:
+        initialTime: 600
+    timeout: 900
+
+# The vendor information states that this is a device software version
+# with known issues.
+  - situation: Known software issue
+    preConditions:
+      - 'internet_service_affected'
+      - 'provider_side_connection_ok'
+      - 'network_connection_led_is_yellow'
+      - 'knowledge_base_check_done'
+      - '! device_software_issue'
+    postConditions:
+      - '+ device_software_issue'
+
+# Now a device update must be done. This requires interaction with the
+# client, but this can be learned by a CA. Due to time needed on 
+# client side, there are no advantages on CA side.
+  - situation: Device update required
+    preConditions:
+      - 'device_software_issue'
+      - '! device_software_upgraded'
+    operation: Trigger remote device update
+    postConditions:
+      - '+ device_software_upgraded'
+      - '- provider_side_connection_ok'
+      - '- network_connection_led_is_yellow'
+      - '- has_problem_symptoms'
+    caConfig:
+      initialKnowledge: false
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 600
+    haConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 600
+        learningTime: 900
+        teachingTime: 3600  # HA can teach the CA within 1 hour to perform this task
+
+# When the client has issues with Internet access, we may try switching from cable
+# to wireless to see if the problem remains. This requires manual work on client
+# side and substantial trust: HAs are not allowed to learn this.
+  - situation: Wireless connection unchecked
+    preConditions:
+      - 'internet_service_affected'
+      - '! wireless_connection_checked'
+    operation: Switch to wireless connection
+    postConditions:
+      - '+ wireless_connection_checked'
+    haConfig:
+      initialKnowledge: false
+      evaluation:
+        initialTime: 10
+        learningTime: 0
+      execution:
+        initialTime: 900
+        learningTime: 600
+
+# The result of the test could be positive or negative
+  - situation: Wireless non-functional
+    preConditions:
+      - 'wireless_connection_checked'
+    postConditions:
+      - '+ wireless_connection_not_ok'
+
+  - situation: Wireless connection OK
+    preConditions:
+      - 'wireless_connection_checked'
+    postConditions:
+      - '+ wireless_connection_ok'
+
+# Now, a new intermediate stage is defined, where we state
+# that the initial discovery required three tests to be done
+  - situation: Extended initial discovery completed
+    preConditions:
+      - 'asked_customer_about_modem_status_led'
+      - 'provider_side_connection_checked'
+      - 'wireless_connection_checked'
+    postConditions:
+      - '+ initial_discovery_completed'
+
+# We shall prefer checking the internal knowledge-base before
+# looking into device vendor data. This can be done much quicker
+# by a CA if the knowledge base is machine-readable.
+  - situation: Provider knowledge-base unchecked
+    preConditions:
+      - 'internet_service_affected'
+      - 'initial_discovery_completed'
+      - '! knowledge_base_check_done'
+    operation: Check provider knowledge base
+    postConditions:
+      - '+ knowledge_base_check_done'
+    caConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 4
+      execution:
+        learningTime: 0
+        initialTime: 8
+    haConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 1
+        learningTime: 0
+      execution:
+        initialTime: 480
+
+# The check of the knowledge-base may tell us that there is an issue with
+# a provider-side setting.
+  - situation: Provider-side setting issue
+    preConditions:
+      - 'provider_side_connection_ok'
+      - 'wireless_connection_not_ok'
+      - 'network_connection_led_is_yellow'
+      - 'knowledge_base_check_done'
+    postConditions:
+      - '+ provider_side_setting_issue'
+
+# The provider-side setting shall be fixed if found wrong. This can easily
+# be done by a CA without teaching.
+  - situation: Wrong provider-side setting X
+    preConditions:
+      - 'provider_side_setting_issue'
+      - '! changed_provider_side_setting'
+    operation: Change setting X on provider side
+    postConditions:
+      - '+ changed_provider_side_setting'
+    caConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 2
+      execution:
+        initialTime: 45     # Once capable of performing this action, CA can do it within 2 minutes
+    haConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 480
+        learningTime: 900
+
+# After fixing the provider-side setting, problems are gone:
+  - situation: Fixed provider-side setting
+    preConditions:
+      - 'provider_side_connection_ok'
+      - 'wireless_connection_not_ok'
+      - 'network_connection_led_is_yellow'
+      - 'has_problem_symptoms'
+      - 'changed_provider_side_setting'
+    postConditions:
+      - '- provider_side_setting_issue'
+      - '- provider_side_connection_ok'
+      - '- wireless_connection_not_ok'
+      - '- network_connection_led_is_yellow'
+      - '- has_problem_symptoms'
+
+# A successful closure of a CSR requires us to ask whether the
+# customer confirms there is no issue anymore. This is easily
+# done by a CA.
+  - situation: No problem symptoms anymore
+    preConditions:
+      - 'affected_service_identified'
+      - '! has_problem_symptoms'
+      - '! confirmed_successful_closure'
+    operation: Confirm successful closure
+    postConditions:
+      - '+ confirmed_successful_closure'
+    caConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 30
+    haConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 0
+      execution:
+        initialTime: 60
+    timeout: 90
+
+# End of simulation task specification.
