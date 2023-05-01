@@ -1,0 +1,54 @@
+/*
+    hi_simulator
+    Benjamin Schlup, Student ID 200050007
+    ---------------------------
+    JaCaMo Application File defining the initial state of the MAS (initial agents, environment) for simulating
+    the handling of Customer Service Requests by a Hybrid Intelligent System making using of collaborating
+    human and artificial agents.
+
+    Below scenario assumes three agents:
+    - Computational Support Agent (CSA)
+    - Human Support Agent (CSA)
+    - Human Teaching Agent (HTA)
+
+    Optionally, a monitoring agent that performs logging can be added:
+    - Monitoring agent for blackboard events
+*/
+
+mas hi_simulator {
+
+    agent hta: human_teaching_agent.asl {
+        beliefs:    agent_type("HA"), agent_displayname("Human Teacher"),
+                    refocusingTime(300), note_taking_time(30)
+        focus:      control.logger, control.timer, tasks.taskBoard, tasks.taskSet
+    }
+
+    agent hsa: human_support_agent.asl {
+        beliefs:    agent_type("HA"), agent_displayname("Human Support Agent"), non_teaching_agent,
+                    refocusing_time(20), note_taking_time(30)
+        focus:      control.logger, control.timer, tasks.taskBoard, tasks.taskSet
+    }
+
+    agent csa: computational_agent.asl {
+        beliefs:    agent_type("CA"), agent_displayname("Computational Support Agent")
+        focus:      control.logger, control.timer, tasks.taskBoard, tasks.taskSet
+    }
+
+    agent mona: monitoring_agent.asl {
+        focus:      control.logger, tasks.taskBoard
+    }
+
+    workspace control {
+        artifact logger: control.LoggerArtifact("Base Logging Window", "log\\hi_simulator_log.csv")
+        artifact timer: control.TimerArtifact("2023-01-03T06:55:00.00Z",130)
+        agents: csa, hsa
+    }
+
+    workspace tasks {
+        artifact taskSet: task.TaskSetArtifact("cfg\\simulation_script.yaml", "task_")
+        artifact taskBoard: task.BlackboardArtifact
+        agents: csa, hsa
+    }
+
+    class-path: lib
+}
