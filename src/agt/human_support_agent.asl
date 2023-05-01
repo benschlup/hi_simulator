@@ -101,7 +101,7 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
        !evaluation(Situations, Task_name);
        !escalate_unknown_situations(Situations, Task_name);
        !execute_next_operation(Situations, Task_name, New_task_status);
-       !handback_if_open_and_possible(CA_name, Task_name, New_task_status);
+       !handback_if_possible(CA_name, Task_name, New_task_status);
        !assist_csa(CA_name, Task_name, New_task_status).
 
 
@@ -110,12 +110,12 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
     :  not ha_help_required(CA_name, Task_name)
     |  not Task_status == "OPEN"
     <- !stop_focus(Task_name);
-       !remove_request_from_blackboard(Task_name, "ha_help_required", [CA_name, Task_name]).
+       !remove_note_from_blackboard(Task_name, "ha_help_required", [CA_name, Task_name]).
 
 // Gracefully handle the case when the task has disappeared:
 -!assist_csa(CA_name, Task_name, Task_status) [focus_fail("cartago.ArtifactNotAvailableException")]
    <-  log("MANAGEMENT",Task_name,"Assisting CSA","FAILED (Task artefact disappeared)");
-       !remove_request_from_blackboard(Task_name, "ha_help_required", [CA_name, Task_name]);
+       !remove_note_from_blackboard(Task_name, "ha_help_required", [CA_name, Task_name]);
        !stop_focus(Task_name).
 
 // If we have the same situational knowledge and the operation was unexpected:
@@ -159,7 +159,7 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
 // In case the task disappeared meanwhile
 -!review_knowledge(Agent_name, Task_name) [error_msg("cartago.ArtifactNotAvailableException")]
     <- log("MANAGEMENT",Task_name,"Reviewing knowledge", "Task artefact not available any longer");
-       !remove_request_from_blackboard(Task_name, "ha_help_required", [Agent_name, Task_name]).
+       !remove_note_from_blackboard(Task_name, "ha_help_required", [Agent_name, Task_name]).
 
 // -----------------------------------------------------------------------------
 // Plans for escalations
@@ -174,13 +174,13 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
        log("DOMAIN",Task_name,"Escalation due to lack of knowledge: disposing task");
        lookupArtifact(Task_name, Task_id);
        disposeArtifact(Task_id);
-       !remove_request_from_blackboard(Task_name, "ha_help_required", [Agent_name, Task_name]);
+       !remove_note_from_blackboard(Task_name, "ha_help_required", [Agent_name, Task_name]);
        .drop_intention(assist_csa(_, Task_name, _)).
 
 // In case the task disappeared meanwhile
 -!escalate_unknown_situations(_,Task_name) [error_msg("cartago.ArtifactNotAvailableException")]
     <- log("MANAGEMENT",Task_name,"Reviewing knowledge", "Task artefact not available any longer");
-       !remove_request_from_blackboard(Task_name, "ha_help_required", [Agent_name, Task_name]);
+       !remove_note_from_blackboard(Task_name, "ha_help_required", [Agent_name, Task_name]);
        .drop_intention(assist_csa(CA_name, Task_name)).
 
 // -----------------------------------------------------------------------------
@@ -200,6 +200,9 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
 -!execute_next_operation([Situation|_],_,"FAILED") [exec_fail("Unexpected operation")]
     <- !forget_domain_knowledge(Situation).
 
+// It seems our last operation wasn't successful for quality reasons, let's retry that:
+-!execute_next_operation([Situation|_], Task_name, "OPEN") [quality_fail(_,_)].
+
 // It seems our last operation wasn't successful for other reasons, let's record that:
 -!execute_next_operation([Situation|_], Task_name, "FAILED") [exec_fail(Error_message)]
     <- .concat("Failure in situation ", Situation, Activity);
@@ -208,11 +211,11 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
 
 // Only take note of teaching if someone is around that handles teaching
 +!teaching_note(CA_name, Situation, Operation)
-    :  hta_available | not non_teaching_agent
-    <- !add_request_to_blackboard(csa_teaching_required,[CA_name, Situation, Operation]).
+    :  hta_available
+    |  not non_teaching_agent
+    <- !add_note_to_blackboard(csa_teaching_required,[CA_name, Situation, Operation]).
 
-+!teaching_note(_,_,_)
-    :  not hta_available & non_teaching_agent.
++!teaching_note(_,_,_).
 
 // -----------------------------------------------------------------------------
 // Plans for handling teaching work
