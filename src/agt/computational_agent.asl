@@ -62,19 +62,34 @@
 
 // For the remaining tasks: Review task for potentially new situations that
 // require action. The sequence is (a) putting focus on the task artefact,
-// (b) evaluating the situation, (c) requesting human assistance if there
-// is no appropriate knowledge in the belief base, (d) or perform any
+// (b) evaluating the situation, (c) skipping situations that are marked
+// suspicious, (d) requesting human assistance if there
+// is no appropriate knowledge in the belief base, (e) or perform any
 // operations appropriate for a recognised situation:
 @review_task [atomic]
 +!review_task(Task_name, Task_status)
     <- !refocus_agent(Task_name);
        !evaluation(Situations, Task_name);
-       !handover_unknown_situations(Situations, Task_name);
-       !execute_operations(Situations, Task_name).
+       ?skip_suspicious(Situations, Clean_situations);
+       !handover_unknown_situations(Clean_situations, Task_name);
+       !execute_operations(Clean_situations, Task_name).
 
 // Handle the case that a task has failed and the artefact has been disposed meanwhile:
 -!review_task(Task_name,_) [focus_fail("cartago.ArtifactNotAvailableException")]
     <- log("MANAGEMENT",Task_name,"Reviewing task","FAILED (Task artefact disappeared)").
+
+// Operations marked as suspicious are not executed again: This is done by removing them from the
+// list of recognised situations:
+skip_suspicious([],[]).
+
+skip_suspicious([Situation | Old_Situations], New_situations)
+     :-  domain_knowledge(Situation, Operation)
+     &   not suspiciousOperation(Situation, Operation)
+     &   New_situations = [Situation | New_situations2]
+     &   skip_suspicious(Old_situations, New_situations2).
+
+skip_suspicious([Situation | Situations], New_situations)
+    :- skip_suspicious(Situations, New_situations).
 
 // Note: Depending on the HIS, more failure situations could arise that require
 //       specific failure-handling plans at this point.
@@ -130,8 +145,8 @@
 -!execute_operation(Situation, Operation, Task_name) [async_and_review, exec_fail("Unexpected operation")]
     <- .my_name(Agent_name);
        !update_note_on_task(Task_name, [Agent_name, Situation, Operation, "Unexpected operation"]);
-       !add_request_to_blackboard("ha_help_required", [Agent_name, Task_name]);
-       !log_blackboard_count(ha_help_required(_,_), "HA help required").
+       +suspiciousOperation(Situation, Operation);
+       !add_request_to_blackboard("ha_help_required", [Agent_name, Task_name]).
 
 // Agent-specific plan to handle timeout:
 -!execute_operation(Situation, Operation, Task_name) [async_and_review, exec_fail("TIMEOUT")]
