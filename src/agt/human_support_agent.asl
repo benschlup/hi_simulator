@@ -1,5 +1,6 @@
 // Human (customer) support agent (HSA) in project hi_simulator
 // Benjamin Schlup, Student ID 200050007
+// (ben.schlup@schlup.com)
 //
 // This agent simulates a human assisting a computational support agent
 // in handling customer service requests.

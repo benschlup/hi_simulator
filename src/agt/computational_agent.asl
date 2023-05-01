@@ -1,5 +1,6 @@
 // Computational agent in project hi_simulator
 // Benjamin Schlup, Student ID 200050007
+// (ben.schlup@schlup.com)
 //
 // This agent simulates a computational support agent handling customer
 // support requests represented by CArtAgO task artefacts.

@@ -1,5 +1,6 @@
 // Shared code for simulated human agents that are part of a Hybrid Intelligent System.
 // Benjamin Schlup, Student ID 200050007
+// (ben.schlup@schlup.com)
 //
 // =============================================================================
 // HANDING TASKS BACK TO COMPUTATIONAL AGENTS

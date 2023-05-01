@@ -1,5 +1,6 @@
 // Shared code for agents that are part of a simulated Hybrid Intelligent System.
 // Benjamin Schlup, Student ID 200050007
+// (ben.schlup@schlup.com)
 //
 // =============================================================================
 // INITIAL GOALS
