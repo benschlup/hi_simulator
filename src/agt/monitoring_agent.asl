@@ -1,5 +1,6 @@
 // Monitoring agent in project hi_simulator
 // Benjamin Schlup, Student ID 200050007
+// (ben.schlup@schlup.com)
 //
 // The monitoring agent is a purely passive part in the MAS that tracks and logs
 // changes on the blackboard that is used for inter-agent communication.

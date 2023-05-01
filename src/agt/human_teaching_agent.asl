@@ -1,5 +1,6 @@
 // Human teacher agent in project hi_simulator
 // Benjamin Schlup, Student ID 200050007
+// (ben.schlup@schlup.com)
 //
 // This is an agent simulating a dedicated teacher. This frees the human
 // customer support agent up from providing the computational agents
