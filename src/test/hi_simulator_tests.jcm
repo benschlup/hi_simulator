@@ -1,0 +1,23 @@
+// JaCaMo project used to run the HI simulator test manager agent
+// (and souce code of the agents to be tested by the manager)
+// Benjamin Schlup, Student ID 200050007
+
+mas unit_tests {
+
+//    agent test_manager {
+//          goals:   create_tester_agents("./src/test/agt","hi_simulator_test.asl")
+//    }
+
+    agent timer_test_agent timer_test_agent.asl {
+          goals:   test_start
+    }
+
+
+    asl-path: "."
+              "src/agt"
+              "src/agt/inc"
+              "src/test/agt"
+              "src/test/inc"
+              "$jacamoJar/test/jacamo/inc"
+              "$jasonJar/test/jason/inc"
+}
