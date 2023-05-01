@@ -104,7 +104,7 @@ skip_suspicious([Situation | Situations], New_situations)
 +!handover_unknown_situations([], Task_name)
     :  not .intend(execute_operation(_,_,Task_name) [async_and_review])
     <- .my_name(Agent_name);
-       !add_request_to_blackboard(Task_name, "ha_help_required", [Agent_name,Task_name]).
+       !add_note_to_blackboard(Task_name, "ha_help_required", [Agent_name,Task_name]).
 
 // In case there are no new situations recognised, but ongoing operations: do nothing,
 // as otherwise a human action may interfere with ongoing operations triggered by the
@@ -146,7 +146,15 @@ skip_suspicious([Situation | Situations], New_situations)
     <- .my_name(Agent_name);
        !update_note_on_task(Task_name, [Agent_name, Situation, Operation, "Unexpected operation"]);
        +suspiciousOperation(Situation, Operation);
-       !add_request_to_blackboard("ha_help_required", [Agent_name, Task_name]).
+       !add_note_to_blackboard("ha_help_required", [Agent_name, Task_name]).
+
+// Agent-specific plan to handle disappearance of artefact:
+-!execute_operation(Situation, Operation, Task_name) [async_and_review, exec_fail("cartago.ArtifactNotAvailableException")]
+    <- .drop_desire(review_task(Task_name,_)).
+
+// It seems our last operation wasn't successful for quality reasons, let's retry that:
+-!execute_operation(Situation, Operation, Task_name) [quality_fail(_,_)]
+    <- !!review_task(Task_name, "OPEN").
 
 // Agent-specific plan to handle timeout:
 -!execute_operation(Situation, Operation, Task_name) [async_and_review, exec_fail("TIMEOUT")]
@@ -157,10 +165,11 @@ skip_suspicious([Situation | Situations], New_situations)
 // -----------------------------------------------------------------------------
 // Provide the HA requesting a reevaluation with a list of recognised situations:
 @reevaluation [atomic]
-+?reevaluation(Situations, Task_name)
++?reevaluation(Clean_situations, Task_name)
     <-  !refocus_agent(Task_name);
         log("DOMAIN", Task_name, "Reevaluating task with current knowledge");
-        !evaluation(Situations, Task_name).
+        !evaluation(Situations, Task_name);
+        ?skip_suspicious(Situations, Clean_situations).
 
 // If the request referenced a task for which no artefact is available, respond
 // with an empty list, indicating that the task cannot be taken back.
