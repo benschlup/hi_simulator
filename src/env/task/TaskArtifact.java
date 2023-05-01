@@ -248,7 +248,7 @@ public class TaskArtifact extends Artifact {
 
                 double qualityRange = (1 - agentActionConfig.getOptimalQuality())
                         + (agentActionConfig.getOptimalQuality() - agentActionConfig.getInitialQuality())
-                        * Math.min(cycles, agentActionConfig.getLearningCycles())
+                        * Math.max(agentActionConfig.getLearningCycles() - cycles, 0)
                         / Math.max(1, agentActionConfig.getLearningCycles());
 
                 double quality = 1 - Math.random() * qualityRange;

@@ -16,7 +16,7 @@ public class AgentActionConfig
     private Integer initialTime = -1;      // agent is unable to perform this atomic task
     private Integer minimumTime = -1;      // dito
     private Double initialQuality = 1.0;   // does deliver perfect quality
-    private Double optimalQuality = 1.0;   // cannot improve quality
+    private Double optimalQuality = -1.0;  // cannot improve quality
     private Integer learningCycles = 0;    // does not improve over time
     private Integer learningTime = -1;     // is unable to learn this atomic task by itself
     private Integer teachingTime = -1;     // agent cannot teach another agent-type this task
