@@ -332,9 +332,9 @@ atomicTaskDefinitions:
     postConditions:
       - '+ provider_side_connection_ok'
 
-# Now we have the option to check device information from a vendor. As this is
-# unstructured data, it must be done by a human and cannot be easily learned
-# by a machine.
+# Now we have the option to check device information from a vendor. It is assumed
+# that an NLP-capable CA can interpret software advisories and release notes quickly
+# but with limited quality.
   - situation: User device version unchecked
     preConditions:
       - 'internet_service_affected'
@@ -344,11 +344,17 @@ atomicTaskDefinitions:
     operation: Check known device software issues
     postConditions:
       - '+ knowledge_base_check_done'
+    caConfig:
+      initialKnowledge: true
+      evaluation:
+        initialTime: 5
+      execution:
+        initialTime: 20
+        initialQuality: 0.7
     haConfig:
       initialKnowledge: true
       evaluation:
         initialTime: 1
-        learningTime: 0
       execution:
         initialTime: 600
     timeout: 900
