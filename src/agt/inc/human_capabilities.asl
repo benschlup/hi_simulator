@@ -76,8 +76,7 @@
 @dedicated_teaching [atomic]
 +!dedicated_teaching(CA_name, Situation, Operation)
     <- ?refocusing_time(Seconds);
-       ?simulation_speed(Simulation_speed);
-       .wait(Seconds * 1000 / Simulation_speed);
+       await(Seconds);
        !teach(CA_name, Situation, Operation);
        !remove_note_from_blackboard(csa_teaching_required,[CA_name, Situation, Operation]);
        !handback_if_possible(CA_name).

@@ -85,8 +85,7 @@ domain_learning_time([_,_,_,_,_,Configured_learning_time,_],Learning_time)
        ?simulation_time(Start_time);
        -learning_start_time(Situation, Operation,_);
        +learning_start_time(Situation, Operation, Start_time);
-       ?simulation_speed(Simulation_speed);
-       .wait((Eval_learning_time+Exec_learning_time)*1000/Simulation_speed);
+       await(Eval_learning_time+Exec_learning_time);
        !update_domain_knowledge(Situation, Operation, Must_triggers, Must_not_triggers, Eval_config, Exec_config);
        -learning_start_time(Situation, Operation, Start_time).
 
@@ -260,8 +259,7 @@ unpackQualityError([Exec_quality,Minimum_quality],Exec_quality,Minimum_quality).
 
 +!wait_for_disposal_of_non_open_task(Task_name, Task_status, Artifact_names)
     :  .member(Task_name, Artifact_names)
-    <- ?simulation_speed(Simulation_speed);
-       .wait(1000 / Simulation_speed);
+    <- await(1);
        !wait_for_disposal_of_non_open_task(Task_name, Task_status).
 
 +!wait_for_disposal_of_non_open_task(Task_name, Task_status, Artifact_names)
@@ -304,8 +302,7 @@ unpackQualityError([Exec_quality,Minimum_quality],Exec_quality,Minimum_quality).
 
 // Simulate time to take a note if there is time required:
 +!note_taking_time : note_taking_time(Note_taking_time) & Note_taking_time > 0
-   <-   ?simulation_speed(Simulation_speed);
-       .wait(Note_taking_time * 1000 / Simulation_speed).
+   <-  await(Note_taking_time).
 
 // Simulate the actual updating of a task note:
 +!update_note_on_task(Task_name, Note_details)
@@ -349,8 +346,7 @@ unpackQualityError([Exec_quality,Minimum_quality],Exec_quality,Minimum_quality).
 @refocus_agent2 [atomic]
 +!refocus_agent(Task_name)
     <- ?refocusing_time(Seconds);
-       ?simulation_speed(Simulation_speed);
-       .wait(Seconds * 1000 / Simulation_speed);
+       await(Seconds);
        lookupArtifact(Task_name, Task_id);
        focus(Task_id);
        .my_name(Agent_name);

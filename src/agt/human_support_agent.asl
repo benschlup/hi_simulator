@@ -74,8 +74,7 @@ hta_available :- .all_names(Agents) & .member(hta, Agents).
     :  break_start_time(_)
     &  (hta_available | (.count(csa_teaching_required(_,_,_), CSA_teaching_requests) & CSA_teaching_requests == 0))
     &  (.count(ha_help_required(_,_), HA_assistance_requests) & HA_assistance_requests == 0)
-    <- ?simulation_speed(Simulation_speed);
-       .wait(1000 / Simulation_speed);
+    <- await(1);
        !consider_a_break.
 
 // -----------------------------------------------------------------------------
