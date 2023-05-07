@@ -66,10 +66,10 @@ public class AgentActionConfig
     }
 
     public Object[] getConfig() {
-        return new Object[]{initialTime, minimumTime, initialQuality, optimalQuality, learningCycles, learningTime, teachingTime};
+        return new Object[]{getInitialTime(), getMinimumTime(), getInitialQuality(), getOptimalQuality(), getLearningCycles(), getLearningTime(), getTeachingTime()};
     }
 
     public void setLearningTime(Integer learningTime) { this.learningTime = learningTime; }
 
-    public Integer getLearningTime(Integer learningTime) { return learningTime; }
+    public Integer getLearningTime() { return learningTime; }
 }
