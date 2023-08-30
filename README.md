@@ -10,7 +10,7 @@ Hybrid Intelligence Simulator based on JaCaMo Multi-Agent System Framework
 ### Ben Schlup (ben.schlup@schlup.com)
 
 ---
-The paper describing this work will be made available after the university has accepted the thesis for the Master's degree. If you require any information with respect to this project prior to publication of the dissertation, please contact ben.schlup@schlup.com.  
+The paper describing this work is available here: http://dx.doi.org/10.13140/RG.2.2.15992.21764/2
 
 The code was developed on JaCaMo v1.1 and tested successfully with JaCaMo v1.2. The folder structure fits into the Docker version of JaCaMo, which can be found here: https://github.com/jacamo-lang/docker. On Windows, using the JaCaMo docker image, a new project can be created in an empty base folder like this:
 ````
